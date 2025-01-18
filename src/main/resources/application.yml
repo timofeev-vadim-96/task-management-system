@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: task-management-system
+#  datasource:
+#    url: jdbc:h2:mem:test
+  datasource:
+    url: jdbc:postgresql://localhost:6666/task_db
+    username: admin
+    password: admin
+  jpa:
+    generate-ddl: false
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+  liquibase:
+    enabled: true
+
+logging:
+  level:
+    web: debug
+
+springdoc:
+  api-docs:
+    path: "/api/v1/api-docs"
+  swagger-ui:
+    path: "/api/v1/swagger-ui"
+  override-with-generic-response: false #чтобы коды ошибок из RestControllerAdvice не распространялись на все эндпоинты
+
+application:
+  security:
+    jwt:
+      SECRET_KEY: cdge07e9f410f80eff1a031eb91058447659c70c86216873ebcfe1455feb7a5c
+      #1 day
+      expiration: 86400000
+      #7 days
+      refresh-token-expiration: 604800000
+
