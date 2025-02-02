@@ -17,6 +17,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -79,7 +80,7 @@ class TaskControllerTest {
                 PageRequest.of(1, 1),
                 1L);
         when(taskService.getAll(any(), any(), any(),
-                any(), anyInt(), anyInt())).thenReturn(tasks);
+                any(), any(Pageable.class))).thenReturn(tasks);
 
         mvc.perform(MockMvcRequestBuilders.get("/api/v1/task")
                         .accept(MediaType.APPLICATION_JSON))

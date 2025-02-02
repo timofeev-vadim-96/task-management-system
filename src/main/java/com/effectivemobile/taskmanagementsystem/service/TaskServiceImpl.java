@@ -12,7 +12,10 @@ import com.effectivemobile.taskmanagementsystem.util.SearchCriteria;
 import com.effectivemobile.taskmanagementsystem.util.TaskPriority;
 import com.effectivemobile.taskmanagementsystem.util.TaskStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -38,10 +41,12 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "taskById", key = "#id")
     public TaskDto get(long id) {
         Task task = taskDao.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Task with id = %d is not found".formatted(id)));
-        return taskConverter.convertToDto(task);
+        TaskDto dto = taskConverter.convertToDto(task);
+        return dto;
     }
 
     @Override
@@ -49,9 +54,7 @@ public class TaskServiceImpl implements TaskService {
     @Cacheable("tasks")
     public Page<TaskDto> getAll(Long implementorId, Long authorId,
                                 TaskStatus status, TaskPriority priority,
-                                int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
-
+                                Pageable pageable) {
         List<SearchCriteria> criteria = collectSearchCriteriaParams(implementorId, authorId, status, priority);
 
         Page<Task> tasks = criteriaDao.findAll(criteria, pageable);
@@ -65,6 +68,9 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
+    @Caching(
+            evict = {@CacheEvict(value = "tasks", allEntries = true)},
+            put = {@CachePut(value = "taskById", key = "#result.id")})
     public TaskDto create(TaskDto dto) {
         AppUser author = userService.getById(dto.getAuthorId());
         AppUser implementor = userService.getById(dto.getImplementorId());
@@ -88,6 +94,9 @@ public class TaskServiceImpl implements TaskService {
      */
     @Override
     @Transactional
+    @Caching(
+            evict = {@CacheEvict(value = "tasks", allEntries = true)},
+            put = {@CachePut(value = "taskById", key = "#result.id")})
     public TaskDto update(TaskDto dto) {
         if (dto.getId() == null) {
             throw new UnsatisfactoryValueException("Id must not be null");
@@ -108,6 +117,9 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
+    @Caching(
+            evict = {@CacheEvict(value = "tasks", allEntries = true)},
+            put = {@CachePut(value = "taskById", key = "#result.id")})
     public TaskDto update(long id, TaskStatus status) {
         Task task = taskDao.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Task with id = %d is not found".formatted(id)));
@@ -117,6 +129,9 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "tasks", allEntries = true),
+            @CacheEvict(value = "taskById", key = "#id")})
     public void deleteById(long id) {
         taskDao.deleteById(id);
     }
