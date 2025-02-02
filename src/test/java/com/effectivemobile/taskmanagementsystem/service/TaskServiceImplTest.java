@@ -22,6 +22,9 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,28 +70,26 @@ class TaskServiceImplTest {
     @MethodSource("getArguments")
     void getALl(Long implementorId, Long authorId,
                 TaskStatus status, TaskPriority priority, long expectedResultSize) {
-        final int page = 1;
-        final int size = 20;
+        Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "id"));
 
         Page<TaskDto> tasks = taskService.getAll(implementorId, authorId, status, priority,
-                page, size);
+                pageable);
 
         assertEquals(expectedResultSize, tasks.getTotalElements());
-        assertEquals(page, tasks.getTotalPages());
+        assertEquals(1, tasks.getTotalPages());
         verify(criteriaDao, times(1)).findAll(any(), any());
     }
 
     @Test
     void getAllByAuthor() {
-        final int expectedTasksSize = 10;
-        final int page = 1;
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"));
         final long authorId = 1L;
 
         Page<TaskDto> tasks = taskService.getAll(null, authorId, null, null,
-                page, expectedTasksSize);
+                pageable);
 
-        assertEquals(expectedTasksSize, tasks.getTotalElements());
-        assertEquals(page, tasks.getTotalPages());
+        assertEquals(10, tasks.getTotalElements());
+        assertEquals(1, tasks.getTotalPages());
         verify(criteriaDao, times(1)).findAll(any(), any());
     }
 

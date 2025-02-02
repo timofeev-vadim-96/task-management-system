@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.GrantedAuthority;
@@ -80,7 +81,7 @@ public class TaskControllerSecurityTest {
         doThrow(new ResponseStatusException(HttpStatus.CREATED))
                 .when(taskController).create(any(TaskDto.class));
         doThrow(new ResponseStatusException(HttpStatus.OK))
-                .when(taskController).getAll(any(), any(), any(), any(), anyInt(), anyInt());
+                .when(taskController).getAll(any(), any(), any(), any(), any(Pageable.class));
         doThrow(new ResponseStatusException(HttpStatus.OK))
                 .when(taskController).get(anyLong());
         doThrow(new ResponseStatusException(HttpStatus.OK))

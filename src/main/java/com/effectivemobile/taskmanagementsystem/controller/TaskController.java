@@ -11,6 +11,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -52,9 +55,14 @@ public class TaskController {
             @RequestParam(value = "authorId", required = false) Long authorId,
             @RequestParam(value = "status", required = false) TaskStatus status,
             @RequestParam(value = "priority", required = false) TaskPriority priority,
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "20") int size) {
-        Page<TaskDto> tasks = taskService.getAll(implementorId, authorId, status, priority, page, size);
+            @PageableDefault(
+                    size = 20,
+                    page = 0,
+                    sort = {"id"},
+                    direction = Sort.Direction.ASC
+            ) Pageable pageable
+    ) {
+        Page<TaskDto> tasks = taskService.getAll(implementorId, authorId, status, priority, pageable);
         return new ResponseEntity<>(tasks, HttpStatus.OK);
     }
 
