@@ -1,5 +1,6 @@
 package com.effectivemobile.taskmanagementsystem.exception;
 
+import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,11 +24,11 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Catches exceptions when required id has an unsatisfactory value
+     * Catches exceptions when token is not valid
      */
-    @ExceptionHandler(UnsatisfactoryValueException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<Void> handleUnsatisfactoryArgumentValueException(UnsatisfactoryValueException e) {
+    @ExceptionHandler({TokenNotValidException.class, JwtException.class})
+    public ResponseEntity<Void> handleTokenNotValidException(TokenNotValidException e) {
         log.warn(e.getMessage());
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }

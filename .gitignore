@@ -13,4 +13,5 @@ target/
 tz.*
 docker/config
 .mvn
-
+logs
+data

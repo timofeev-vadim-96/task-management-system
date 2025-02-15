@@ -1,10 +1,10 @@
 package com.effectivemobile.taskmanagementsystem.controller;
 
-import com.effectivemobile.taskmanagementsystem.dto.CommentDto;
+import com.effectivemobile.taskmanagementsystem.dto.request.comment.CommentDtoCreateRequest;
 import com.effectivemobile.taskmanagementsystem.security.JwtService;
 import com.effectivemobile.taskmanagementsystem.security.SecurityConfig;
 import com.effectivemobile.taskmanagementsystem.security.filter.JwtAuthenticationFilter;
-import com.effectivemobile.taskmanagementsystem.util.AppRole;
+import com.effectivemobile.taskmanagementsystem.util.Role;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.jupiter.api.BeforeAll;
@@ -48,10 +48,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("Тест безопасности эндпоинтов контроллера для работы с комментами")
 public class CommentControllerSecurityTest {
     private static final GrantedAuthority[] USER_ROLES =
-            new GrantedAuthority[]{new SimpleGrantedAuthority(AppRole.ROLE_USER.name())};
+            new GrantedAuthority[]{new SimpleGrantedAuthority(Role.ROLE_USER.name())};
 
     private static final GrantedAuthority[] ADMIN_ROLES =
-            new GrantedAuthority[]{new SimpleGrantedAuthority(AppRole.ROLE_ADMIN.name())};
+            new GrantedAuthority[]{new SimpleGrantedAuthority(Role.ROLE_ADMIN.name())};
 
     @Autowired
     private MockMvc mvc;
@@ -75,11 +75,16 @@ public class CommentControllerSecurityTest {
      */
     @BeforeEach
     void stubbing() {
-        doThrow(new ResponseStatusException(HttpStatus.CREATED)).when(commentController).create(any(CommentDto.class));
-        doThrow(new ResponseStatusException(HttpStatus.OK)).when(commentController).getAllByTaskId(anyLong());
-        doThrow(new ResponseStatusException(HttpStatus.OK)).when(commentController).get(anyLong());
-        doThrow(new ResponseStatusException(HttpStatus.OK)).when(commentController).delete(anyLong());
-        doThrow(new ResponseStatusException(HttpStatus.OK)).when(commentController).update(anyLong(), anyString());
+        doThrow(new ResponseStatusException(HttpStatus.CREATED)).when(commentController)
+                .create(any(CommentDtoCreateRequest.class));
+        doThrow(new ResponseStatusException(HttpStatus.OK)).when(commentController)
+                .getAllByTaskId(anyLong());
+        doThrow(new ResponseStatusException(HttpStatus.OK)).when(commentController)
+                .get(anyLong());
+        doThrow(new ResponseStatusException(HttpStatus.OK)).when(commentController)
+                .delete(anyLong());
+        doThrow(new ResponseStatusException(HttpStatus.OK)).when(commentController)
+                .update(anyLong(), anyString());
     }
 
     @DisplayName("should return expected status")
@@ -153,8 +158,7 @@ public class CommentControllerSecurityTest {
     }
 
     private static void addArgsForCreate(List<Arguments> args) throws Exception {
-        CommentDto comment = CommentDto.builder()
-                .id(1L)
+        CommentDtoCreateRequest comment = CommentDtoCreateRequest.builder()
                 .text("some text")
                 .authorId(2L)
                 .taskId(1L)

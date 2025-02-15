@@ -9,6 +9,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
@@ -25,6 +27,8 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
     public static final String BEARER_PREFIX = "Bearer ";
 
     public static final String HEADER_NAME = "Authorization";
@@ -56,6 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 if (jwtService.isTokenValid(jwt, userDetails)) {
                     authenticateUser(request, userDetails);
+                    logger.info("Successful authentication with valid token by email  = {}", userDetails.getUsername());
                 }
             } catch (EntityNotFoundException e) {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);

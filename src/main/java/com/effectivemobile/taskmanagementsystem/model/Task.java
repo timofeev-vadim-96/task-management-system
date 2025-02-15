@@ -67,10 +67,10 @@ public class Task {
     @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
-    private AppUser author;
+    private User author;
 
     @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "implementor_id")
-    private AppUser implementor;
+    private User implementor;
 }

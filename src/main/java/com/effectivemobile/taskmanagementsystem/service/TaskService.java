@@ -1,22 +1,24 @@
 package com.effectivemobile.taskmanagementsystem.service;
 
-import com.effectivemobile.taskmanagementsystem.dto.TaskDto;
+import com.effectivemobile.taskmanagementsystem.dto.request.task.TaskDtoCreateRequest;
+import com.effectivemobile.taskmanagementsystem.dto.request.task.TaskDtoUpdateRequest;
+import com.effectivemobile.taskmanagementsystem.dto.response.TaskDtoResponse;
 import com.effectivemobile.taskmanagementsystem.util.TaskPriority;
 import com.effectivemobile.taskmanagementsystem.util.TaskStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface TaskService {
-    TaskDto get(long id);
+    TaskDtoResponse get(long id);
 
-    Page<TaskDto> getAll(Long implementorId, Long authorId, TaskStatus status,
-                         TaskPriority priority, Pageable pageable);
+    Page<TaskDtoResponse> getAll(Long implementorId, Long authorId, TaskStatus status,
+                                 TaskPriority priority, Pageable pageable);
 
-    TaskDto create(TaskDto dto);
+    TaskDtoResponse create(TaskDtoCreateRequest dto);
 
-    TaskDto update(TaskDto dto);
+    TaskDtoResponse update(TaskDtoUpdateRequest dto);
 
-    TaskDto update(long id, TaskStatus status);
+    TaskDtoResponse update(long id, TaskStatus status);
 
     void deleteById(long id);
 }

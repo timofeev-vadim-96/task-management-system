@@ -1,6 +1,7 @@
 package com.effectivemobile.taskmanagementsystem.controller;
 
-import com.effectivemobile.taskmanagementsystem.dto.CommentDto;
+import com.effectivemobile.taskmanagementsystem.dto.request.comment.CommentDtoCreateRequest;
+import com.effectivemobile.taskmanagementsystem.dto.response.CommentDtoResponse;
 import com.effectivemobile.taskmanagementsystem.security.filter.JwtAuthenticationFilter;
 import com.effectivemobile.taskmanagementsystem.service.CommentService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,11 +40,11 @@ class CommentControllerTest {
     @MockBean
     private CommentService commentService;
 
-    private CommentDto comment;
+    private CommentDtoResponse response;
 
     @BeforeEach
     void init() {
-        comment = CommentDto.builder()
+        response = CommentDtoResponse.builder()
                 .id(1L)
                 .text("some text")
                 .authorId(2L)
@@ -53,58 +54,67 @@ class CommentControllerTest {
 
     @Test
     void create() throws Exception {
-        when(commentService.create(comment)).thenReturn(comment);
+        CommentDtoCreateRequest request = CommentDtoCreateRequest.builder()
+                .text(response.getText())
+                .authorId(response.getAuthorId())
+                .taskId(response.getTaskId())
+                .build();
+        when(commentService.create(request)).thenReturn(response);
 
         mvc.perform(MockMvcRequestBuilders.post("/api/v1/comment")
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(comment)))
+                        .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json(mapper.writeValueAsString(comment)));
+                .andExpect(content().json(mapper.writeValueAsString(response)));
     }
 
     @Test
     void get() throws Exception {
-        when(commentService.get(comment.getId())).thenReturn(comment);
+        long requestId = response.getId();
+        when(commentService.get(requestId)).thenReturn(response);
 
-        mvc.perform(MockMvcRequestBuilders.get("/api/v1/comment/{id}", comment.getId())
+        mvc.perform(MockMvcRequestBuilders.get("/api/v1/comment/{id}", requestId)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json(mapper.writeValueAsString(comment)));
+                .andExpect(content().json(mapper.writeValueAsString(response)));
     }
 
     @Test
     void getAllByTaskId() throws Exception {
-        when(commentService.getAllByTask(comment.getTaskId())).thenReturn(List.of(comment));
+        long requestId = response.getTaskId();
+        when(commentService.getAllByTask(requestId)).thenReturn(List.of(response));
 
-        mvc.perform(MockMvcRequestBuilders.get("/api/v1/comment/task/{taskId}", comment.getTaskId())
+        mvc.perform(MockMvcRequestBuilders.get("/api/v1/comment/task/{taskId}", requestId)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(List.of(comment))));
+                .andExpect(content().json(mapper.writeValueAsString(List.of(response))));
     }
 
     @Test
     void update() throws Exception {
-        when(commentService.update(comment.getId(), comment.getText())).thenReturn(comment);
+        long requestId = response.getId();
+        String requestText = response.getText();
+        when(commentService.update(requestId, requestText)).thenReturn(response);
 
         mvc.perform(MockMvcRequestBuilders.put("/api/v1/comment")
-                        .param("id", String.valueOf(comment.getId()))
-                        .param("comment", comment.getText())
+                        .param("id", String.valueOf(requestId))
+                        .param("comment", requestText)
                         .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(comment)))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json(mapper.writeValueAsString(comment)));
+                .andExpect(content().json(mapper.writeValueAsString(response)));
     }
 
     @Test
     void delete() throws Exception {
-        doNothing().when(commentService).deleteById(comment.getId());
+        long requestId = response.getId();
+        doNothing().when(commentService).deleteById(requestId);
 
-        mvc.perform(MockMvcRequestBuilders.delete("/api/v1/comment/{id}", comment.getTaskId()))
+        mvc.perform(MockMvcRequestBuilders.delete("/api/v1/comment/{id}", response.getTaskId()))
                 .andExpect(status().isOk());
     }
 }

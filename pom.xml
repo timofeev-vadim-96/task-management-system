@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.effective-mobile</groupId>
     <artifactId>task-management-system</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
 
     <developers>
         <developer>
@@ -24,6 +24,7 @@
         <java.version>17</java.version>
         <springdoc.version>2.2.0</springdoc.version>
         <jsonwebtoken.version>0.12.5</jsonwebtoken.version>
+        <springdoc-openapi-maven-plugin>1.4</springdoc-openapi-maven-plugin>
     </properties>
 
     <dependencies>
@@ -48,6 +49,7 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
+        <!--Data base-->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
@@ -126,19 +128,11 @@
                         </goals>
                     </execution>
                 </executions>
-                <configuration>
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-maven-plugin</artifactId>
-                <version>1.4</version>
+                <version>${springdoc-openapi-maven-plugin}</version>
                 <executions>
                     <execution>
                         <phase>integration-test</phase>

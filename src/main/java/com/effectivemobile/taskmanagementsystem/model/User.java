@@ -1,6 +1,6 @@
 package com.effectivemobile.taskmanagementsystem.model;
 
-import com.effectivemobile.taskmanagementsystem.util.AppRole;
+import com.effectivemobile.taskmanagementsystem.util.Role;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -31,7 +31,7 @@ import java.util.List;
 @EqualsAndHashCode(of = {"id", "email"})
 @ToString(of = {"id"})
 @Table(name = "users")
-public class AppUser implements UserDetails {
+public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -48,7 +48,7 @@ public class AppUser implements UserDetails {
     @Setter
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
-    private AppRole role;
+    private Role role;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

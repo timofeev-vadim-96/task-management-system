@@ -1,6 +1,7 @@
 package com.effectivemobile.taskmanagementsystem.controller;
 
-import com.effectivemobile.taskmanagementsystem.dto.CommentDto;
+import com.effectivemobile.taskmanagementsystem.dto.request.comment.CommentDtoCreateRequest;
+import com.effectivemobile.taskmanagementsystem.dto.response.CommentDtoResponse;
 import com.effectivemobile.taskmanagementsystem.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,7 +25,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@SecurityRequirement(name = "JWT")
+@SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Контроллер комментариев", description = "Контроллер для работы с комментариями")
 public class CommentController {
     private final CommentService commentService;
@@ -39,8 +40,8 @@ public class CommentController {
             @ApiResponse(responseCode = "404",
                     description = "id задания или автора задания не корректны")
     })
-    public ResponseEntity<CommentDto> create(@RequestBody CommentDto dto) {
-        CommentDto created = commentService.create(dto);
+    public ResponseEntity<CommentDtoResponse> create(@RequestBody CommentDtoCreateRequest dto) {
+        CommentDtoResponse created = commentService.create(dto);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
@@ -50,8 +51,8 @@ public class CommentController {
             @ApiResponse(responseCode = "200", description = "комментарий найден"),
             @ApiResponse(responseCode = "404", description = "id комментария не корректно")
     })
-    public ResponseEntity<CommentDto> get(@PathVariable("id") long id) {
-        CommentDto comment = commentService.get(id);
+    public ResponseEntity<CommentDtoResponse> get(@PathVariable("id") long id) {
+        CommentDtoResponse comment = commentService.get(id);
         return new ResponseEntity<>(comment, HttpStatus.OK);
     }
 
@@ -60,8 +61,8 @@ public class CommentController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "комментарии найдены")
     })
-    public ResponseEntity<List<CommentDto>> getAllByTaskId(@PathVariable("taskId") long taskId) {
-        List<CommentDto> comments = commentService.getAllByTask(taskId);
+    public ResponseEntity<List<CommentDtoResponse>> getAllByTaskId(@PathVariable("taskId") long taskId) {
+        List<CommentDtoResponse> comments = commentService.getAllByTask(taskId);
         return new ResponseEntity<>(comments, HttpStatus.OK);
     }
 
@@ -75,8 +76,8 @@ public class CommentController {
             @ApiResponse(responseCode = "404",
                     description = "id комментария не корректно")
     })
-    public ResponseEntity<CommentDto> update(@RequestParam long id, @NotBlank @RequestParam String comment) {
-        CommentDto updated = commentService.update(id, comment);
+    public ResponseEntity<CommentDtoResponse> update(@RequestParam long id, @NotBlank @RequestParam String comment) {
+        CommentDtoResponse updated = commentService.update(id, comment);
         return new ResponseEntity<>(updated, HttpStatus.OK);
     }
 

@@ -1,0 +1,30 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:13
+    container_name: task_postgres
+    ports:
+      - "6666:5432"
+    environment:
+      POSTGRES_DB: task_db
+      POSTGRES_USER: ${POSTGRES_ADMIN_LOGIN}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD}
+    volumes:
+      - ./data/postgres-data:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    #    image: task-management-system:0.0.1 - если запускать из готового образа
+    container_name: task_app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/task_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_ADMIN_LOGIN}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_ADMIN_PASSWORD}
+      APPLICATION_SECURITY_JWT_SECRET_KEY: ${SECRET_JWT_KEY}

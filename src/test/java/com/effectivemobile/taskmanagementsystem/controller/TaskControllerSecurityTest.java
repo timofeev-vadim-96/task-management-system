@@ -1,10 +1,11 @@
 package com.effectivemobile.taskmanagementsystem.controller;
 
-import com.effectivemobile.taskmanagementsystem.dto.TaskDto;
+import com.effectivemobile.taskmanagementsystem.dto.request.task.TaskDtoCreateRequest;
+import com.effectivemobile.taskmanagementsystem.dto.request.task.TaskDtoUpdateRequest;
 import com.effectivemobile.taskmanagementsystem.security.JwtService;
 import com.effectivemobile.taskmanagementsystem.security.SecurityConfig;
 import com.effectivemobile.taskmanagementsystem.security.filter.JwtAuthenticationFilter;
-import com.effectivemobile.taskmanagementsystem.util.AppRole;
+import com.effectivemobile.taskmanagementsystem.util.Role;
 import com.effectivemobile.taskmanagementsystem.util.TaskPriority;
 import com.effectivemobile.taskmanagementsystem.util.TaskStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,7 +41,6 @@ import java.util.stream.Stream;
 
 import static java.util.Objects.nonNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -51,10 +51,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("Тест безопасности эндпоинтов контроллера для работы с комментами")
 public class TaskControllerSecurityTest {
     private static final GrantedAuthority[] USER_ROLES =
-            new GrantedAuthority[]{new SimpleGrantedAuthority(AppRole.ROLE_USER.name())};
+            new GrantedAuthority[]{new SimpleGrantedAuthority(Role.ROLE_USER.name())};
 
     private static final GrantedAuthority[] ADMIN_ROLES =
-            new GrantedAuthority[]{new SimpleGrantedAuthority(AppRole.ROLE_ADMIN.name())};
+            new GrantedAuthority[]{new SimpleGrantedAuthority(Role.ROLE_ADMIN.name())};
 
     @Autowired
     private MockMvc mvc;
@@ -79,7 +79,7 @@ public class TaskControllerSecurityTest {
     @BeforeEach
     void stubbing() {
         doThrow(new ResponseStatusException(HttpStatus.CREATED))
-                .when(taskController).create(any(TaskDto.class));
+                .when(taskController).create(any(TaskDtoCreateRequest.class));
         doThrow(new ResponseStatusException(HttpStatus.OK))
                 .when(taskController).getAll(any(), any(), any(), any(), any(Pageable.class));
         doThrow(new ResponseStatusException(HttpStatus.OK))
@@ -87,7 +87,7 @@ public class TaskControllerSecurityTest {
         doThrow(new ResponseStatusException(HttpStatus.OK))
                 .when(taskController).delete(anyLong());
         doThrow(new ResponseStatusException(HttpStatus.OK))
-                .when(taskController).update(any(TaskDto.class));
+                .when(taskController).update(any(TaskDtoUpdateRequest.class));
         doThrow(new ResponseStatusException(HttpStatus.OK))
                 .when(taskController).update(anyLong(), any(TaskStatus.class));
     }
@@ -164,11 +164,11 @@ public class TaskControllerSecurityTest {
     }
 
     private static void addArgsForCreate(List<Arguments> args) throws Exception {
-        TaskDto task = TaskDto.builder()
+        TaskDtoCreateRequest task = TaskDtoCreateRequest.builder()
                 .title("title")
                 .description("description")
-                .priority(TaskPriority.НИЗКИЙ)
-                .status(TaskStatus.ЗАВЕРШЕНО)
+                .priority(TaskPriority.LOW)
+                .status(TaskStatus.COMPLETED)
                 .authorId(1L)
                 .implementorId(2L)
                 .build();
@@ -185,11 +185,12 @@ public class TaskControllerSecurityTest {
     }
 
     private static void addArgsForUpdate(List<Arguments> args) throws Exception {
-        TaskDto task = TaskDto.builder()
+        TaskDtoUpdateRequest task = TaskDtoUpdateRequest.builder()
+                .id(1L)
                 .title("title")
                 .description("description")
-                .priority(TaskPriority.НИЗКИЙ)
-                .status(TaskStatus.ЗАВЕРШЕНО)
+                .priority(TaskPriority.LOW)
+                .status(TaskStatus.COMPLETED)
                 .authorId(1L)
                 .implementorId(2L)
                 .build();
@@ -206,7 +207,7 @@ public class TaskControllerSecurityTest {
     }
 
     private static void addArgsForStatusUpdate(List<Arguments> args) {
-        Map<String, String> params = Map.of("id", "1", "status", TaskStatus.В_ПРОЦЕССЕ.name());
+        Map<String, String> params = Map.of("id", "1", "status", TaskStatus.IN_PROCESS.name());
 
         args.addAll(List.of(
                 Arguments.of("put", "/api/v1/task/status",

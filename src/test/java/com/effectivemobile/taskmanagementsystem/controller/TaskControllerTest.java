@@ -1,6 +1,8 @@
 package com.effectivemobile.taskmanagementsystem.controller;
 
-import com.effectivemobile.taskmanagementsystem.dto.TaskDto;
+import com.effectivemobile.taskmanagementsystem.dto.request.task.TaskDtoCreateRequest;
+import com.effectivemobile.taskmanagementsystem.dto.request.task.TaskDtoUpdateRequest;
+import com.effectivemobile.taskmanagementsystem.dto.response.TaskDtoResponse;
 import com.effectivemobile.taskmanagementsystem.security.filter.JwtAuthenticationFilter;
 import com.effectivemobile.taskmanagementsystem.service.TaskService;
 import com.effectivemobile.taskmanagementsystem.util.TaskPriority;
@@ -25,7 +27,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -47,16 +48,16 @@ class TaskControllerTest {
     @MockBean
     private TaskService taskService;
 
-    private TaskDto task;
+    private TaskDtoResponse response;
 
     @BeforeEach
     void init() {
-        task = TaskDto.builder()
+        response = TaskDtoResponse.builder()
                 .id(1L)
                 .title("title")
                 .description("description")
-                .priority(TaskPriority.ВЫСОКИЙ)
-                .status(TaskStatus.В_ОЖИДАНИИ)
+                .priority(TaskPriority.HIGH)
+                .status(TaskStatus.IN_STAY)
                 .authorId(1L)
                 .implementorId(2L)
                 .build();
@@ -64,19 +65,20 @@ class TaskControllerTest {
 
     @Test
     void get() throws Exception {
-        when(taskService.get(task.getId())).thenReturn(task);
+        long requestId = response.getId();
+        when(taskService.get(requestId)).thenReturn(response);
 
-        mvc.perform(MockMvcRequestBuilders.get("/api/v1/task/{id}", task.getId())
+        mvc.perform(MockMvcRequestBuilders.get("/api/v1/task/{id}", requestId)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json(mapper.writeValueAsString(task)));
+                .andExpect(content().json(mapper.writeValueAsString(response)));
     }
 
     @Test
     void getAll() throws Exception {
-        PageImpl<TaskDto> tasks = new PageImpl<>(
-                List.of(task),
+        PageImpl<TaskDtoResponse> tasks = new PageImpl<>(
+                List.of(response),
                 PageRequest.of(1, 1),
                 1L);
         when(taskService.getAll(any(), any(), any(),
@@ -91,48 +93,68 @@ class TaskControllerTest {
 
     @Test
     void create() throws Exception {
-        when(taskService.create(any(TaskDto.class))).thenReturn(task);
+        when(taskService.create(any(TaskDtoCreateRequest.class))).thenReturn(response);
+        TaskDtoCreateRequest request = TaskDtoCreateRequest.builder()
+                .title(response.getTitle())
+                .description(response.getDescription())
+                .priority(response.getPriority())
+                .status(response.getStatus())
+                .authorId(response.getAuthorId())
+                .implementorId(response.getImplementorId())
+                .build();
 
         mvc.perform(MockMvcRequestBuilders.post("/api/v1/task")
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(task)))
+                        .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json(mapper.writeValueAsString(task)));
+                .andExpect(content().json(mapper.writeValueAsString(response)));
     }
 
     @Test
     void update() throws Exception {
-        when(taskService.update(any(TaskDto.class))).thenReturn(task);
+        when(taskService.update(any(TaskDtoUpdateRequest.class))).thenReturn(response);
+        TaskDtoUpdateRequest request = TaskDtoUpdateRequest.builder()
+                .id(response.getId())
+                .title(response.getTitle())
+                .description(response.getDescription())
+                .priority(response.getPriority())
+                .status(response.getStatus())
+                .authorId(response.getAuthorId())
+                .implementorId(response.getImplementorId())
+                .build();
 
         mvc.perform(MockMvcRequestBuilders.put("/api/v1/task")
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(task)))
+                        .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json(mapper.writeValueAsString(task)));
+                .andExpect(content().json(mapper.writeValueAsString(response)));
     }
 
     @Test
-    void testUpdate() throws Exception {
-        when(taskService.update(anyLong(), any(TaskStatus.class))).thenReturn(task);
+    void statusUpdate() throws Exception {
+        long requestId = response.getId();
+        TaskStatus requestStatus = response.getStatus();
+        when(taskService.update(anyLong(), any(TaskStatus.class))).thenReturn(response);
 
         mvc.perform(MockMvcRequestBuilders.put("/api/v1/task/status")
                         .accept(MediaType.APPLICATION_JSON)
-                        .param("id", String.valueOf(task.getId()))
-                        .param("status", task.getStatus().name()))
+                        .param("id", String.valueOf(requestId))
+                        .param("status", requestStatus.name()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json(mapper.writeValueAsString(task)));
+                .andExpect(content().json(mapper.writeValueAsString(response)));
     }
 
     @Test
     void delete() throws Exception {
-        doNothing().when(taskService).deleteById(task.getId());
+        long requestId = response.getId();
+        doNothing().when(taskService).deleteById(requestId);
 
-        mvc.perform(MockMvcRequestBuilders.delete("/api/v1/task/{id}", task.getId()))
+        mvc.perform(MockMvcRequestBuilders.delete("/api/v1/task/{id}", requestId))
                 .andExpect(status().isOk());
     }
 }

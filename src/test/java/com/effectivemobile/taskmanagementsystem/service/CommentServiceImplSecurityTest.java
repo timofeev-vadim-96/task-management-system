@@ -1,11 +1,12 @@
 package com.effectivemobile.taskmanagementsystem.service;
 
-import com.effectivemobile.taskmanagementsystem.converter.CommentConverter;
 import com.effectivemobile.taskmanagementsystem.dao.CommentDao;
-import com.effectivemobile.taskmanagementsystem.dto.CommentDto;
+import com.effectivemobile.taskmanagementsystem.dto.request.comment.CommentDtoCreateRequest;
+import com.effectivemobile.taskmanagementsystem.dto.response.CommentDtoResponse;
 import com.effectivemobile.taskmanagementsystem.exception.AttemptingAccessOtherUserEntityException;
-import com.effectivemobile.taskmanagementsystem.model.AppUser;
+import com.effectivemobile.taskmanagementsystem.mapper.CommentMapper;
 import com.effectivemobile.taskmanagementsystem.model.Comment;
+import com.effectivemobile.taskmanagementsystem.model.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.Optional;
 
@@ -24,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 @DisplayName("Тест безопасности сервиса для работы с комментариями")
 @SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class CommentServiceImplSecurityTest {
     private final static String ADMIN_EMAIL = "testAdmin@gmail.com"; //id = 1
 
@@ -36,18 +39,20 @@ public class CommentServiceImplSecurityTest {
     private CommentDao commentDao;
 
     @MockBean
-    private CommentConverter commentConverter;
+    private CommentMapper commentMapper;
 
     @ParameterizedTest
     @ValueSource(longs = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
     @WithUserDetails(value = ADMIN_EMAIL)
     void createByAdmin(long id) {
-        CommentDto dto = CommentDto.builder()
+        CommentDtoCreateRequest dto = CommentDtoCreateRequest.builder()
                 .authorId(id)
                 .taskId(id)
                 .build();
-        when(commentDao.save(any(Comment.class))).thenReturn(Comment.builder().build());
-        when(commentConverter.convertToDto(any(Comment.class))).thenReturn(dto);
+        when(commentDao.save(any(Comment.class)))
+                .thenReturn(Comment.builder().build());
+        when(commentMapper.convertToDto(any(Comment.class)))
+                .thenReturn(CommentDtoResponse.builder().build());
 
         assertDoesNotThrow(() -> commentService.create(dto));
     }
@@ -58,12 +63,14 @@ public class CommentServiceImplSecurityTest {
         final long authorId = 2L;
         final long taskId = 1L;
 
-        CommentDto dto = CommentDto.builder()
+        CommentDtoCreateRequest dto = CommentDtoCreateRequest.builder()
                 .authorId(authorId)
                 .taskId(taskId)
                 .build();
-        when(commentDao.save(any(Comment.class))).thenReturn(Comment.builder().build());
-        when(commentConverter.convertToDto(any(Comment.class))).thenReturn(dto);
+        when(commentDao.save(any(Comment.class)))
+                .thenReturn(Comment.builder().build());
+        when(commentMapper.convertToDto(any(Comment.class)))
+                .thenReturn(CommentDtoResponse.builder().build());
 
         assertDoesNotThrow(() -> commentService.create(dto));
     }
@@ -73,7 +80,7 @@ public class CommentServiceImplSecurityTest {
     void createByUserDeniedOnAnotherUser() {
         final long anotherUserId = 3L;
 
-        CommentDto dto = CommentDto.builder()
+        CommentDtoCreateRequest dto = CommentDtoCreateRequest.builder()
                 .authorId(anotherUserId)
                 .taskId(1L)
                 .build();
@@ -86,7 +93,7 @@ public class CommentServiceImplSecurityTest {
     void createByUserDeniedOnAnotherUserTask() {
         final long anotherUserTaskId = 2L;
 
-        CommentDto dto = CommentDto.builder()
+        CommentDtoCreateRequest dto = CommentDtoCreateRequest.builder()
                 .authorId(2L)
                 .taskId(anotherUserTaskId)
                 .build();
@@ -99,13 +106,14 @@ public class CommentServiceImplSecurityTest {
     void updateByUserSuccessfully() {
         final long userId = 2L;
         when(commentDao.findById(userId)).thenReturn(Optional.of(Comment.builder()
-                .author(AppUser.builder()
+                .author(User.builder()
                         .id(userId)
                         .build())
                 .build()));
-        when(commentDao.save(any(Comment.class))).thenReturn(Comment.builder().build());
-        when(commentConverter.convertToDto(any(Comment.class)))
-                .thenReturn(CommentDto.builder()
+        when(commentDao.save(any(Comment.class)))
+                .thenReturn(Comment.builder().build());
+        when(commentMapper.convertToDto(any(Comment.class)))
+                .thenReturn(CommentDtoResponse.builder()
                         .authorId(userId).build());
 
         assertDoesNotThrow(() -> commentService.update(userId, "any"));
@@ -116,12 +124,12 @@ public class CommentServiceImplSecurityTest {
     void updateByUserDeniedOnAnotherUserComment() {
         final long anotherUserCommentId = 3L;
         when(commentDao.findById(anotherUserCommentId)).thenReturn(Optional.of(Comment.builder()
-                .author(AppUser.builder()
+                .author(User.builder()
                         .id(anotherUserCommentId)
                         .build())
                 .build()));
-        when(commentConverter.convertToDto(any(Comment.class)))
-                .thenReturn(CommentDto.builder()
+        when(commentMapper.convertToDto(any(Comment.class)))
+                .thenReturn(CommentDtoResponse.builder()
                         .authorId(anotherUserCommentId)
                         .build());
 

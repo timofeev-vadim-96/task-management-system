@@ -1,7 +1,7 @@
 package com.effectivemobile.taskmanagementsystem.security;
 
 import com.effectivemobile.taskmanagementsystem.security.filter.JwtAuthenticationFilter;
-import com.effectivemobile.taskmanagementsystem.util.AppRole;
+import com.effectivemobile.taskmanagementsystem.util.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -10,7 +10,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -65,22 +64,23 @@ public class SecurityConfig {
     private void secureEndpoints(HttpSecurity http) throws Exception {
         http.
                 authorizeHttpRequests(authz -> authz
-                        .requestMatchers(HttpMethod.POST, "/api/v1/sign-in", "api/v1/sign-up").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/swagger-ui/**", "api/v1/api-docs/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/sign-in", "/api/v1/sign-up",
+                                "/api/v1/token/refresh").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/swagger-ui/**", "/api/v1/api-docs/**").permitAll()
 
                         //task
-                        .requestMatchers(HttpMethod.GET, "api/v1/task/{id}").authenticated()
-                        .requestMatchers(HttpMethod.GET, "api/v1/task").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "api/v1/task/status").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "api/v1/task").hasAuthority(AppRole.ROLE_ADMIN.name())
-                        .requestMatchers(HttpMethod.POST, "api/v1/task").hasAuthority(AppRole.ROLE_ADMIN.name())
-                        .requestMatchers(HttpMethod.DELETE, "api/v1/task/{id}")
-                                .hasAuthority(AppRole.ROLE_ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/task/{id}").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/task").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/task/status").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/task").hasAuthority(Role.ROLE_ADMIN.name())
+                        .requestMatchers(HttpMethod.POST, "/api/v1/task").hasAuthority(Role.ROLE_ADMIN.name())
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/task/{id}")
+                        .hasAuthority(Role.ROLE_ADMIN.name())
 
                         //comment
-                        .requestMatchers(HttpMethod.POST, "api/v1/comment").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "api/v1/comment").authenticated()
-                        .requestMatchers("api/v1/comment/**").hasAuthority(AppRole.ROLE_ADMIN.name())
+                        .requestMatchers(HttpMethod.POST, "/api/v1/comment").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/comment").authenticated()
+                        .requestMatchers("/api/v1/comment/**").hasAuthority(Role.ROLE_ADMIN.name())
 
                         .anyRequest().authenticated()
                 );

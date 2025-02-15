@@ -41,7 +41,7 @@ class SearchCriteriaWithPaginationTaskDaoImplTest {
         return Stream.of(
                 Arguments.of(new SearchCriteria("author", ":", 1), 10),
                 Arguments.of(new SearchCriteria("implementor", ":", 2), 2),
-                Arguments.of(new SearchCriteria("status", ":", TaskStatus.В_ПРОЦЕССЕ), 3),
-                Arguments.of(new SearchCriteria("priority", ":", TaskPriority.СРЕДНИЙ), 3));
+                Arguments.of(new SearchCriteria("status", ":", TaskStatus.IN_PROCESS), 3),
+                Arguments.of(new SearchCriteria("priority", ":", TaskPriority.MIDDLE), 3));
     }
 }

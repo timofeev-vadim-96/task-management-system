@@ -1,11 +1,11 @@
 package com.effectivemobile.taskmanagementsystem.aop;
 
-import com.effectivemobile.taskmanagementsystem.dto.TaskDto;
+import com.effectivemobile.taskmanagementsystem.dto.response.TaskDtoResponse;
 import com.effectivemobile.taskmanagementsystem.exception.AttemptingAccessOtherUserEntityException;
-import com.effectivemobile.taskmanagementsystem.model.AppUser;
+import com.effectivemobile.taskmanagementsystem.model.User;
 import com.effectivemobile.taskmanagementsystem.service.TaskService;
 import com.effectivemobile.taskmanagementsystem.service.UserService;
-import com.effectivemobile.taskmanagementsystem.util.AppRole;
+import com.effectivemobile.taskmanagementsystem.util.Role;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -28,9 +28,9 @@ public class TaskAspect {
     @AfterReturning(
             pointcut = "execution(* com.effectivemobile.taskmanagementsystem.service.TaskServiceImpl.get(..))",
             returning = "task")
-    public void checkTaskImplementorAfterReturn(TaskDto task) {
-        AppUser currentUser = userService.getCurrentAppUser();
-        if (!currentUser.getRole().equals(AppRole.ROLE_ADMIN) && !currentUser.getId().equals(task.getImplementorId())) {
+    public void checkTaskImplementorAfterReturn(TaskDtoResponse task) {
+        User currentUser = userService.getCurrentAppUser();
+        if (!currentUser.getRole().equals(Role.ROLE_ADMIN) && !currentUser.getId().equals(task.getImplementorId())) {
             throw new AttemptingAccessOtherUserEntityException(
                     "Попытка пользователя с id = %d доступа к заданию исполнителя с id = %d"
                             .formatted(currentUser.getId(), task.getImplementorId()));
@@ -43,9 +43,9 @@ public class TaskAspect {
     @Before(value = "execution(* com.effectivemobile.taskmanagementsystem.service.TaskServiceImpl" +
             ".update(long,..)) && args(id,..)", argNames = "id")
     public void protectAnotherUserTaskBeforeUpdate(long id) {
-        AppUser currentUser = userService.getCurrentAppUser();
-        if (!currentUser.getRole().equals(AppRole.ROLE_ADMIN)) {
-            TaskDto task = taskService.get(id);
+        User currentUser = userService.getCurrentAppUser();
+        if (!currentUser.getRole().equals(Role.ROLE_ADMIN)) {
+            TaskDtoResponse task = taskService.get(id);
             if (!currentUser.getId().equals(task.getImplementorId())) {
                 throw new AttemptingAccessOtherUserEntityException(
                         "Попытка пользователя с id = %d изменения статуса задания исполнителя с id = %d"
@@ -59,9 +59,9 @@ public class TaskAspect {
      */
     @Around(value = "execution(* com.effectivemobile.taskmanagementsystem.service.TaskServiceImpl.getAll(..))")
     public Object ensureImplementorIdCriteriaIsDeterminedBeforeGetAll(ProceedingJoinPoint joinPoint) throws Throwable {
-        AppUser currentUser = userService.getCurrentAppUser();
+        User currentUser = userService.getCurrentAppUser();
 
-        if (!currentUser.getRole().equals(AppRole.ROLE_ADMIN)) {
+        if (!currentUser.getRole().equals(Role.ROLE_ADMIN)) {
             Object[] args = joinPoint.getArgs();
             Long implementorId = (Long) args[0];
             if (implementorId == null) {

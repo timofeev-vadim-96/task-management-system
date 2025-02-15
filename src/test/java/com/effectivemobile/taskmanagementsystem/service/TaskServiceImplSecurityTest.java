@@ -1,19 +1,16 @@
 package com.effectivemobile.taskmanagementsystem.service;
 
-import com.effectivemobile.taskmanagementsystem.converter.TaskConverter;
 import com.effectivemobile.taskmanagementsystem.dao.SearchCriteriaWithPaginationTaskDao;
 import com.effectivemobile.taskmanagementsystem.dao.TaskDao;
-import com.effectivemobile.taskmanagementsystem.dto.TaskDto;
+import com.effectivemobile.taskmanagementsystem.dto.response.TaskDtoResponse;
 import com.effectivemobile.taskmanagementsystem.exception.AttemptingAccessOtherUserEntityException;
+import com.effectivemobile.taskmanagementsystem.mapper.TaskMapper;
 import com.effectivemobile.taskmanagementsystem.model.Task;
 import com.effectivemobile.taskmanagementsystem.util.TaskStatus;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -24,8 +21,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,16 +29,13 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @DisplayName("Тест безопасности сервиса для работы с тасками")
 @SpringBootTest
-@Transactional(propagation = Propagation.NEVER)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class TaskServiceImplSecurityTest {
     private final static String ADMIN_EMAIL = "testAdmin@gmail.com"; //id = 1
 
@@ -56,7 +48,7 @@ public class TaskServiceImplSecurityTest {
     private TaskDao taskDao;
 
     @MockBean
-    private TaskConverter taskConverter;
+    private TaskMapper taskMapper;
 
     @SpyBean
     private SearchCriteriaWithPaginationTaskDao criteriaDao;
@@ -67,7 +59,7 @@ public class TaskServiceImplSecurityTest {
         final int expectedTasksSize = 10;
         Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "id"));
 
-        Page<TaskDto> tasks = taskService.getAll(null, null, null, null, pageable);
+        Page<TaskDtoResponse> tasks = taskService.getAll(null, null, null, null, pageable);
         assertEquals(expectedTasksSize, tasks.getTotalElements());
         verify(criteriaDao, atLeastOnce()).findAll(any(List.class), any(Pageable.class));
     }
@@ -82,9 +74,9 @@ public class TaskServiceImplSecurityTest {
         final int expectedTasksSize = 2;
         Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "id"));
 
-        Page<TaskDto> tasks = taskService
+        Page<TaskDtoResponse> tasks = taskService
                 .getAll(userId, null, null, null, pageable);
-        Page<TaskDto> tasksWithoutFilterByAuthor = taskService
+        Page<TaskDtoResponse> tasksWithoutFilterByAuthor = taskService
                 .getAll(null, null, null, null, pageable);
 
         assertEquals(expectedTasksSize, tasks.getTotalElements());
@@ -108,8 +100,8 @@ public class TaskServiceImplSecurityTest {
     void getByAdmin(long id) {
         when(taskDao.findById(id))
                 .thenReturn(Optional.of(Task.builder().id(id).build()));
-        when(taskConverter.convertToDto(any(Task.class)))
-                .thenReturn(TaskDto.builder().id(id).build());
+        when(taskMapper.convertToDto(any(Task.class)))
+                .thenReturn(TaskDtoResponse.builder().id(id).build());
 
         assertDoesNotThrow(() -> taskService.get(id));
     }
@@ -122,8 +114,8 @@ public class TaskServiceImplSecurityTest {
         final long userId = 2L;
         when(taskDao.findById(userTaskId))
                 .thenReturn(Optional.of(Task.builder().build()));
-        when(taskConverter.convertToDto(any(Task.class)))
-                .thenReturn(TaskDto.builder().id(userTaskId).implementorId(userId).build());
+        when(taskMapper.convertToDto(any(Task.class)))
+                .thenReturn(TaskDtoResponse.builder().id(userTaskId).implementorId(userId).build());
 
         assertDoesNotThrow(() -> taskService.get(userTaskId));
     }
@@ -136,8 +128,8 @@ public class TaskServiceImplSecurityTest {
         final long anotherUserId = 4L;
         when(taskDao.findById(anotherUserTaskId))
                 .thenReturn(Optional.of(Task.builder().build()));
-        when(taskConverter.convertToDto(any(Task.class)))
-                .thenReturn(TaskDto.builder().id(anotherUserTaskId).implementorId(anotherUserId).build());
+        when(taskMapper.convertToDto(any(Task.class)))
+                .thenReturn(TaskDtoResponse.builder().id(anotherUserTaskId).implementorId(anotherUserId).build());
 
         assertThrowsExactly(AttemptingAccessOtherUserEntityException.class, () -> taskService.get(anotherUserTaskId));
     }
@@ -150,10 +142,10 @@ public class TaskServiceImplSecurityTest {
         when(taskDao.findById(id))
                 .thenReturn(Optional.of(Task.builder().build()));
         when(taskDao.save(any(Task.class))).thenReturn(Task.builder().id(id).build());
-        when(taskConverter.convertToDto(any(Task.class)))
-                .thenReturn(TaskDto.builder().id(id).authorId(adminId).build());
+        when(taskMapper.convertToDto(any(Task.class)))
+                .thenReturn(TaskDtoResponse.builder().id(id).authorId(adminId).build());
 
-        assertDoesNotThrow(() -> taskService.update(id, TaskStatus.ЗАВЕРШЕНО));
+        assertDoesNotThrow(() -> taskService.update(id, TaskStatus.COMPLETED));
     }
 
     @Test
@@ -165,10 +157,10 @@ public class TaskServiceImplSecurityTest {
         when(taskDao.findById(userTaskId))
                 .thenReturn(Optional.of(Task.builder().build()));
         when(taskDao.save(any(Task.class))).thenReturn(Task.builder().build());
-        when(taskConverter.convertToDto(any(Task.class)))
-                .thenReturn(TaskDto.builder().id(userTaskId).implementorId(userId).build());
+        when(taskMapper.convertToDto(any(Task.class)))
+                .thenReturn(TaskDtoResponse.builder().id(userTaskId).implementorId(userId).build());
 
-        assertDoesNotThrow(() -> taskService.update(userTaskId, TaskStatus.ЗАВЕРШЕНО));
+        assertDoesNotThrow(() -> taskService.update(userTaskId, TaskStatus.COMPLETED));
     }
 
     @Test
@@ -179,10 +171,10 @@ public class TaskServiceImplSecurityTest {
         final long anotherUserId = 4L;
         when(taskDao.findById(anotherUserTaskId))
                 .thenReturn(Optional.of(Task.builder().build()));
-        when(taskConverter.convertToDto(any(Task.class)))
-                .thenReturn(TaskDto.builder().implementorId(anotherUserId).build());
+        when(taskMapper.convertToDto(any(Task.class)))
+                .thenReturn(TaskDtoResponse.builder().implementorId(anotherUserId).build());
 
         assertThrowsExactly(AttemptingAccessOtherUserEntityException.class,
-                () -> taskService.update(anotherUserTaskId, TaskStatus.ЗАВЕРШЕНО));
+                () -> taskService.update(anotherUserTaskId, TaskStatus.COMPLETED));
     }
 }

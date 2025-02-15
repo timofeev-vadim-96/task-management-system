@@ -4,11 +4,10 @@ import com.effectivemobile.taskmanagementsystem.dao.UserDao;
 import com.effectivemobile.taskmanagementsystem.exception.EmailAlreadyExistsException;
 import com.effectivemobile.taskmanagementsystem.exception.EntityNotFoundException;
 import com.effectivemobile.taskmanagementsystem.exception.UserNotFoundException;
-import com.effectivemobile.taskmanagementsystem.model.AppUser;
+import com.effectivemobile.taskmanagementsystem.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -28,7 +27,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      * @return созданный пользователь
      */
     @Transactional
-    public AppUser create(AppUser user) {
+    public User create(User user) {
         if (userDao.existsByEmail(user.getEmail())) {
             throw new EmailAlreadyExistsException("Пользователь с таким email уже существует");
         }
@@ -42,14 +41,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      * @return пользователь
      */
     @Transactional(readOnly = true)
-    public AppUser getUserByEmail(String email) {
+    public User getUserByEmail(String email) {
         return userDao.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("User with email = %s is not found".formatted(email)));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public AppUser getById(long id) {
+    public User getById(long id) {
         return userDao.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User with id = %d is not found".formatted(id)));
     }
@@ -60,7 +59,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      * @return текущий пользователь
      */
     @Transactional(readOnly = true)
-    public AppUser getCurrentAppUser() {
+    public User getCurrentAppUser() {
         // Получение имени пользователя из контекста Spring Security
         var email = SecurityContextHolder.getContext().getAuthentication().getName();
         return getUserByEmail(email);
@@ -69,11 +68,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        AppUser user = userDao.findByEmail(username)
+        User user = userDao.findByEmail(username)
                 .orElseThrow(() ->
                         new UserNotFoundException("User with login: %s not found".formatted(username)));
 
-        return new User(
+        return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
                 Set.of(new SimpleGrantedAuthority(user.getRole().toString())));

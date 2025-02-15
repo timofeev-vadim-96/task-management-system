@@ -1,13 +1,14 @@
 package com.effectivemobile.taskmanagementsystem.service;
 
-import com.effectivemobile.taskmanagementsystem.converter.CommentConverter;
-import com.effectivemobile.taskmanagementsystem.converter.TaskConverter;
 import com.effectivemobile.taskmanagementsystem.dao.SearchCriteriaWithPaginationTaskDao;
 import com.effectivemobile.taskmanagementsystem.dao.SearchCriteriaWithPaginationTaskDaoImpl;
 import com.effectivemobile.taskmanagementsystem.dao.TaskDao;
-import com.effectivemobile.taskmanagementsystem.dto.TaskDto;
+import com.effectivemobile.taskmanagementsystem.dto.request.task.TaskDtoCreateRequest;
+import com.effectivemobile.taskmanagementsystem.dto.request.task.TaskDtoUpdateRequest;
+import com.effectivemobile.taskmanagementsystem.dto.response.TaskDtoResponse;
 import com.effectivemobile.taskmanagementsystem.exception.EntityNotFoundException;
-import com.effectivemobile.taskmanagementsystem.exception.UnsatisfactoryValueException;
+import com.effectivemobile.taskmanagementsystem.mapper.CommentMapper;
+import com.effectivemobile.taskmanagementsystem.mapper.TaskMapper;
 import com.effectivemobile.taskmanagementsystem.model.Task;
 import com.effectivemobile.taskmanagementsystem.util.TaskPriority;
 import com.effectivemobile.taskmanagementsystem.util.TaskStatus;
@@ -41,7 +42,7 @@ import static org.mockito.Mockito.verify;
 
 @DisplayName("Сервис для работы с тасками")
 @DataJpaTest
-@Import({TaskServiceImpl.class, UserServiceImpl.class, TaskConverter.class, CommentConverter.class,
+@Import({TaskServiceImpl.class, UserServiceImpl.class, TaskMapper.class, CommentMapper.class,
         SearchCriteriaWithPaginationTaskDaoImpl.class})
 @Transactional(propagation = Propagation.NEVER)
 class TaskServiceImplTest {
@@ -60,7 +61,7 @@ class TaskServiceImplTest {
     @ParameterizedTest
     @ValueSource(longs = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
     void get(long id) {
-        TaskDto task = taskService.get(id);
+        TaskDtoResponse task = taskService.get(id);
 
         assertThat(task).isNotNull().hasFieldOrPropertyWithValue("id", id);
         verify(taskDao, times(1)).findById(id);
@@ -72,7 +73,7 @@ class TaskServiceImplTest {
                 TaskStatus status, TaskPriority priority, long expectedResultSize) {
         Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "id"));
 
-        Page<TaskDto> tasks = taskService.getAll(implementorId, authorId, status, priority,
+        Page<TaskDtoResponse> tasks = taskService.getAll(implementorId, authorId, status, priority,
                 pageable);
 
         assertEquals(expectedResultSize, tasks.getTotalElements());
@@ -85,7 +86,7 @@ class TaskServiceImplTest {
         Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"));
         final long authorId = 1L;
 
-        Page<TaskDto> tasks = taskService.getAll(null, authorId, null, null,
+        Page<TaskDtoResponse> tasks = taskService.getAll(null, authorId, null, null,
                 pageable);
 
         assertEquals(10, tasks.getTotalElements());
@@ -96,16 +97,16 @@ class TaskServiceImplTest {
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     void create() {
-        TaskDto dto = TaskDto.builder()
+        TaskDtoCreateRequest dto = TaskDtoCreateRequest.builder()
                 .title("title")
                 .description("description")
-                .priority(TaskPriority.НИЗКИЙ)
-                .status(TaskStatus.ЗАВЕРШЕНО)
+                .priority(TaskPriority.LOW)
+                .status(TaskStatus.COMPLETED)
                 .authorId(1L)
                 .implementorId(2L)
                 .build();
 
-        TaskDto created = taskService.create(dto);
+        TaskDtoResponse created = taskService.create(dto);
 
         assertThat(created).isNotNull()
                 .usingRecursiveComparison()
@@ -117,8 +118,7 @@ class TaskServiceImplTest {
     @Test
     void creteNegativeWhenAuthorDoesNotExists() {
         long notExistingAuthorId = 11L;
-        TaskDto dto = TaskDto.builder()
-                .id(1L)
+        TaskDtoCreateRequest dto = TaskDtoCreateRequest.builder()
                 .authorId(11L)
                 .build();
 
@@ -129,8 +129,7 @@ class TaskServiceImplTest {
     @Test
     void creteNegativeWhenImplementorDoesNotExists() {
         long notExistingImplementorId = 11L;
-        TaskDto dto = TaskDto.builder()
-                .id(1L)
+        TaskDtoCreateRequest dto = TaskDtoCreateRequest.builder()
                 .authorId(11L)
                 .build();
 
@@ -140,17 +139,17 @@ class TaskServiceImplTest {
 
     @Test
     void update() {
-        TaskDto dto = TaskDto.builder()
+        TaskDtoUpdateRequest dto = TaskDtoUpdateRequest.builder()
                 .id(1L)
                 .title("title")
                 .description("description")
-                .priority(TaskPriority.НИЗКИЙ)
-                .status(TaskStatus.ЗАВЕРШЕНО)
+                .priority(TaskPriority.LOW)
+                .status(TaskStatus.COMPLETED)
                 .authorId(1L)
                 .implementorId(2L)
                 .build();
 
-        TaskDto updated = taskService.update(dto);
+        TaskDtoResponse updated = taskService.update(dto);
         Task task = taskDao.findById(dto.getId()).get();
 
         assertThat(updated).isNotNull()
@@ -170,7 +169,7 @@ class TaskServiceImplTest {
     @Test
     void updateNegativeWhenAuthorDoesNotExists() {
         long notExistingImplementorId = 11L;
-        TaskDto dto = TaskDto.builder()
+        TaskDtoUpdateRequest dto = TaskDtoUpdateRequest.builder()
                 .id(1L)
                 .implementorId(11L)
                 .build();
@@ -180,16 +179,9 @@ class TaskServiceImplTest {
     }
 
     @Test
-    void updateNegativeWhenIdIsNull() {
-        TaskDto dto = TaskDto.builder().build();
-
-        assertThrowsExactly(UnsatisfactoryValueException.class, () -> taskService.update(dto));
-    }
-
-    @Test
     void updateNegativeWhenTaskDoesNotExists() {
         long notExistingId = 11L;
-        TaskDto dto = TaskDto.builder()
+        TaskDtoUpdateRequest dto = TaskDtoUpdateRequest.builder()
                 .id(11L)
                 .build();
 
@@ -200,9 +192,9 @@ class TaskServiceImplTest {
     @Test
     void updateStatus() {
         long id = 1L;
-        TaskStatus status = TaskStatus.ЗАВЕРШЕНО;
+        TaskStatus status = TaskStatus.COMPLETED;
 
-        TaskDto updated = taskService.update(id, status);
+        TaskDtoResponse updated = taskService.update(id, status);
         Task task = taskDao.findById(id).get();
 
         assertThat(updated).isNotNull()
@@ -218,7 +210,7 @@ class TaskServiceImplTest {
         long notExistingId = 11L;
 
         assertThrowsExactly(EntityNotFoundException.class,
-                () -> taskService.update(notExistingId, TaskStatus.ЗАВЕРШЕНО));
+                () -> taskService.update(notExistingId, TaskStatus.COMPLETED));
         verify(taskDao, times(1)).findById(notExistingId);
     }
 
@@ -239,8 +231,8 @@ class TaskServiceImplTest {
                 Arguments.of(null, null, null, null, 10),
                 Arguments.of(null, 1L, null, null, 10),
                 Arguments.of(2L, null, null, null, 2),
-                Arguments.of(null, null, TaskStatus.В_ПРОЦЕССЕ, null, 3),
-                Arguments.of(null, null, null, TaskPriority.СРЕДНИЙ, 3)
+                Arguments.of(null, null, TaskStatus.IN_PROCESS, null, 3),
+                Arguments.of(null, null, null, TaskPriority.MIDDLE, 3)
         );
     }
 }

@@ -1,13 +1,13 @@
 package com.effectivemobile.taskmanagementsystem.service;
 
-import com.effectivemobile.taskmanagementsystem.model.AppUser;
+import com.effectivemobile.taskmanagementsystem.model.User;
 
 public interface UserService {
-    AppUser create(AppUser user);
+    User create(User user);
 
-    AppUser getUserByEmail(String email);
+    User getUserByEmail(String email);
 
-    AppUser getById(long id);
+    User getById(long id);
 
-    AppUser getCurrentAppUser();
+    User getCurrentAppUser();
 }

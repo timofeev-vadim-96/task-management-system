@@ -4,8 +4,8 @@ import com.effectivemobile.taskmanagementsystem.dao.UserDao;
 import com.effectivemobile.taskmanagementsystem.exception.EmailAlreadyExistsException;
 import com.effectivemobile.taskmanagementsystem.exception.EntityNotFoundException;
 import com.effectivemobile.taskmanagementsystem.exception.UserNotFoundException;
-import com.effectivemobile.taskmanagementsystem.model.AppUser;
-import com.effectivemobile.taskmanagementsystem.util.AppRole;
+import com.effectivemobile.taskmanagementsystem.model.User;
+import com.effectivemobile.taskmanagementsystem.util.Role;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -41,13 +41,13 @@ class UserServiceImplTest {
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     void create() {
-        AppUser newUser = AppUser.builder()
+        User newUser = User.builder()
                 .email("newUserEmail@gmail.com")
                 .password("password")
-                .role(AppRole.ROLE_USER)
+                .role(Role.ROLE_USER)
                 .build();
 
-        AppUser user = userService.create(newUser);
+        User user = userService.create(newUser);
 
         assertThat(user).isNotNull()
                 .usingRecursiveComparison()
@@ -60,10 +60,10 @@ class UserServiceImplTest {
     @Test
     void createNegative() {
         String alreadyExistsEmail = "testUser@gmail.com";
-        AppUser newUser = AppUser.builder()
+        User newUser = User.builder()
                 .email(alreadyExistsEmail)
                 .password("password")
-                .role(AppRole.ROLE_USER)
+                .role(Role.ROLE_USER)
                 .build();
 
         assertThrowsExactly(EmailAlreadyExistsException.class, () -> userService.create(newUser));
@@ -74,7 +74,7 @@ class UserServiceImplTest {
     void getUserByEmail() {
         String expectedEmail = "testUser@gmail.com";
 
-        AppUser user = userService.getUserByEmail(expectedEmail);
+        User user = userService.getUserByEmail(expectedEmail);
 
         assertThat(user).isNotNull().hasFieldOrPropertyWithValue("email", expectedEmail);
         verify(userDao, times(1)).findByEmail(expectedEmail);
@@ -91,7 +91,7 @@ class UserServiceImplTest {
     @ParameterizedTest
     @ValueSource(longs = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
     void getById(long id) {
-        AppUser user = userService.getById(id);
+        User user = userService.getById(id);
 
         assertThat(user).isNotNull().hasFieldOrPropertyWithValue("id", id);
         verify(userDao, times(1)).findById(id);
@@ -110,7 +110,7 @@ class UserServiceImplTest {
     void getCurrentAppUser() {
         String expectedEmail = "testUser@gmail.com";
 
-        AppUser user = userService.getCurrentAppUser();
+        User user = userService.getCurrentAppUser();
 
         assertEquals(expectedEmail, user.getEmail());
     }

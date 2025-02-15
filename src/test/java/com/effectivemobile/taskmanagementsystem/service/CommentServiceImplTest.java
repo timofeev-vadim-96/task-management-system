@@ -1,10 +1,11 @@
 package com.effectivemobile.taskmanagementsystem.service;
 
-import com.effectivemobile.taskmanagementsystem.converter.CommentConverter;
 import com.effectivemobile.taskmanagementsystem.dao.CommentDao;
 import com.effectivemobile.taskmanagementsystem.dao.TaskDao;
-import com.effectivemobile.taskmanagementsystem.dto.CommentDto;
+import com.effectivemobile.taskmanagementsystem.dto.request.comment.CommentDtoCreateRequest;
+import com.effectivemobile.taskmanagementsystem.dto.response.CommentDtoResponse;
 import com.effectivemobile.taskmanagementsystem.exception.EntityNotFoundException;
+import com.effectivemobile.taskmanagementsystem.mapper.CommentMapper;
 import com.effectivemobile.taskmanagementsystem.model.Comment;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @DataJpaTest
-@Import({CommentServiceImpl.class, CommentConverter.class, UserServiceImpl.class})
+@Import({CommentServiceImpl.class, CommentMapper.class, UserServiceImpl.class})
 @DisplayName("Сервис для работы с комментариями")
 @Transactional(propagation = Propagation.NEVER)
 class CommentServiceImplTest {
@@ -48,7 +49,7 @@ class CommentServiceImplTest {
     @ParameterizedTest
     @ValueSource(longs = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
     void get(long id) {
-        CommentDto comment = commentService.get(id);
+        CommentDtoResponse comment = commentService.get(id);
 
         assertThat(comment).isNotNull().hasFieldOrPropertyWithValue("id", id);
         verify(commentDao, times(1)).findById(id);
@@ -65,7 +66,7 @@ class CommentServiceImplTest {
     @ParameterizedTest
     @ValueSource(longs = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
     void getAllByTask(long taskId) {
-        List<CommentDto> commentsTyTaskId = commentService.getAllByTask(taskId);
+        List<CommentDtoResponse> commentsTyTaskId = commentService.getAllByTask(taskId);
 
         assertThat(commentsTyTaskId).isNotNull()
                 .isNotEmpty()
@@ -77,13 +78,13 @@ class CommentServiceImplTest {
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     void create() {
-        CommentDto dto = CommentDto.builder()
+        CommentDtoCreateRequest dto = CommentDtoCreateRequest.builder()
                 .text("test comment text")
                 .taskId(1L)
                 .authorId(2L)
                 .build();
 
-        CommentDto saved = commentService.create(dto);
+        CommentDtoResponse saved = commentService.create(dto);
 
         assertThat(saved).isNotNull()
                 .hasNoNullFieldsOrProperties()
@@ -96,7 +97,7 @@ class CommentServiceImplTest {
     @Test
     void createNegativeWhenAuthorDoesNotExists() {
         long notExistingAuthor = 11L;
-        CommentDto dto = CommentDto.builder()
+        CommentDtoCreateRequest dto = CommentDtoCreateRequest.builder()
                 .text("test comment text")
                 .taskId(1L)
                 .authorId(notExistingAuthor)
@@ -109,7 +110,7 @@ class CommentServiceImplTest {
     @Test
     void createNegativeWhenTaskDoesNotExists() {
         long notExistingTask = 11L;
-        CommentDto dto = CommentDto.builder()
+        CommentDtoCreateRequest dto = CommentDtoCreateRequest.builder()
                 .text("test comment text")
                 .taskId(notExistingTask)
                 .authorId(1L)
@@ -124,7 +125,7 @@ class CommentServiceImplTest {
         String textToUpdate = "updated comment text";
         long commentId = 1L;
 
-        CommentDto updated = commentService.update(commentId, textToUpdate);
+        CommentDtoResponse updated = commentService.update(commentId, textToUpdate);
         Comment comment = commentDao.findById(commentId).get();
 
         assertThat(updated).isNotNull()

@@ -19,9 +19,9 @@ create table if not exists tasks
     implementor_id bigint references users (id),
     description    varchar(255) not null,
     priority       varchar(255)
-        constraint tasks_priority_check check (priority IN ('ВЫСОКИЙ', 'СРЕДНИЙ', 'НИЗКИЙ')),
+        constraint tasks_priority_check check (priority IN ('HIGH', 'MIDDLE', 'LOW')),
     status         varchar(255)
-        constraint tasks_status_check check (status IN ('В_ОЖИДАНИИ', 'В_ПРОЦЕССЕ', 'ЗАВЕРШЕНО')),
+        constraint tasks_status_check check (status IN ('IN_STAY', 'IN_PROCESS', 'COMPLETED')),
     title          varchar(255)
 );
 
