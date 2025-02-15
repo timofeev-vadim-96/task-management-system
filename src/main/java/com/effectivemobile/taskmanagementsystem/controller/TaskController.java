@@ -1,6 +1,8 @@
 package com.effectivemobile.taskmanagementsystem.controller;
 
-import com.effectivemobile.taskmanagementsystem.dto.TaskDto;
+import com.effectivemobile.taskmanagementsystem.dto.request.task.TaskDtoCreateRequest;
+import com.effectivemobile.taskmanagementsystem.dto.request.task.TaskDtoUpdateRequest;
+import com.effectivemobile.taskmanagementsystem.dto.response.TaskDtoResponse;
 import com.effectivemobile.taskmanagementsystem.service.TaskService;
 import com.effectivemobile.taskmanagementsystem.util.TaskPriority;
 import com.effectivemobile.taskmanagementsystem.util.TaskStatus;
@@ -27,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@SecurityRequirement(name = "JWT")
+@SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Контроллер заданий", description = "Контроллер для работы с заданиями")
 public class TaskController {
     private final TaskService taskService;
@@ -39,8 +41,8 @@ public class TaskController {
             @ApiResponse(responseCode = "403", description = "попытка получить доступ к заданию другого исполнителя"),
             @ApiResponse(responseCode = "404", description = "id задания не корректно")
     })
-    public ResponseEntity<TaskDto> get(@PathVariable("id") long id) {
-        TaskDto task = taskService.get(id);
+    public ResponseEntity<TaskDtoResponse> get(@PathVariable("id") long id) {
+        TaskDtoResponse task = taskService.get(id);
         return new ResponseEntity<>(task, HttpStatus.OK);
     }
 
@@ -50,7 +52,7 @@ public class TaskController {
             @ApiResponse(responseCode = "200", description = "задания найдены"),
             @ApiResponse(responseCode = "403", description = "попытка доступа ко всем заданиям другого исполнителя")
     })
-    public ResponseEntity<Page<TaskDto>> getAll(
+    public ResponseEntity<Page<TaskDtoResponse>> getAll(
             @RequestParam(value = "implementorId", required = false) Long implementorId,
             @RequestParam(value = "authorId", required = false) Long authorId,
             @RequestParam(value = "status", required = false) TaskStatus status,
@@ -62,7 +64,7 @@ public class TaskController {
                     direction = Sort.Direction.ASC
             ) Pageable pageable
     ) {
-        Page<TaskDto> tasks = taskService.getAll(implementorId, authorId, status, priority, pageable);
+        Page<TaskDtoResponse> tasks = taskService.getAll(implementorId, authorId, status, priority, pageable);
         return new ResponseEntity<>(tasks, HttpStatus.OK);
     }
 
@@ -72,8 +74,8 @@ public class TaskController {
             @ApiResponse(responseCode = "201", description = "задание создано"),
             @ApiResponse(responseCode = "404", description = "id автора задания или его исполнителя не корректны")
     })
-    public ResponseEntity<TaskDto> create(@RequestBody TaskDto dto) {
-        TaskDto task = taskService.create(dto);
+    public ResponseEntity<TaskDtoResponse> create(@RequestBody TaskDtoCreateRequest dto) {
+        TaskDtoResponse task = taskService.create(dto);
         return new ResponseEntity<>(task, HttpStatus.CREATED);
     }
 
@@ -84,8 +86,8 @@ public class TaskController {
             @ApiResponse(responseCode = "400", description = "id обновляемого задания не может быть null"),
             @ApiResponse(responseCode = "404", description = "id задания или id автора задания не корректны")
     })
-    public ResponseEntity<TaskDto> update(@RequestBody TaskDto dto) {
-        TaskDto task = taskService.update(dto);
+    public ResponseEntity<TaskDtoResponse> update(@RequestBody TaskDtoUpdateRequest dto) {
+        TaskDtoResponse task = taskService.update(dto);
         return new ResponseEntity<>(task, HttpStatus.OK);
     }
 
@@ -96,8 +98,8 @@ public class TaskController {
             @ApiResponse(responseCode = "403", description = "попытка изменения статуса задания другого пользователя"),
             @ApiResponse(responseCode = "404", description = "id задания не корректно")
     })
-    public ResponseEntity<TaskDto> update(@RequestParam long id, @RequestParam TaskStatus status) {
-        TaskDto task = taskService.update(id, status);
+    public ResponseEntity<TaskDtoResponse> update(@RequestParam long id, @RequestParam TaskStatus status) {
+        TaskDtoResponse task = taskService.update(id, status);
         return new ResponseEntity<>(task, HttpStatus.OK);
     }
 

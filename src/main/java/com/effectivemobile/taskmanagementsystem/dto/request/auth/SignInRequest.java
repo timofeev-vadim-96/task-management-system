@@ -1,4 +1,4 @@
-package com.effectivemobile.taskmanagementsystem.controller.dto;
+package com.effectivemobile.taskmanagementsystem.dto.request.auth;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;

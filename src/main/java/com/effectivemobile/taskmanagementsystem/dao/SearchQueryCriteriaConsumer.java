@@ -1,6 +1,6 @@
 package com.effectivemobile.taskmanagementsystem.dao;
 
-import com.effectivemobile.taskmanagementsystem.model.AppUser;
+import com.effectivemobile.taskmanagementsystem.model.User;
 import com.effectivemobile.taskmanagementsystem.util.SearchCriteria;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
@@ -31,7 +31,7 @@ public class SearchQueryCriteriaConsumer implements Consumer<SearchCriteria> {
             if (root.get(param.getKey()).getJavaType() == String.class) {
                 predicate = builder.and(predicate, builder.like(
                         root.get(param.getKey()), "%" + param.getValue() + "%"));
-            } else if (root.get(param.getKey()).getJavaType() == AppUser.class) {
+            } else if (root.get(param.getKey()).getJavaType() == User.class) {
                 predicate = builder.and(predicate, builder.equal(
                         root.get(param.getKey()).get("id"), param.getValue()));
             } else {

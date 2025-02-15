@@ -1,10 +1,11 @@
 package com.effectivemobile.taskmanagementsystem.controller;
 
-import com.effectivemobile.taskmanagementsystem.controller.dto.JwtAuthenticationResponse;
-import com.effectivemobile.taskmanagementsystem.controller.dto.SignInRequest;
-import com.effectivemobile.taskmanagementsystem.controller.dto.SignUpRequest;
+import com.effectivemobile.taskmanagementsystem.dto.request.auth.JwtAuthenticationResponse;
+import com.effectivemobile.taskmanagementsystem.dto.request.auth.JwtRefreshRequest;
+import com.effectivemobile.taskmanagementsystem.dto.request.auth.SignInRequest;
+import com.effectivemobile.taskmanagementsystem.dto.request.auth.SignUpRequest;
 import com.effectivemobile.taskmanagementsystem.security.AuthService;
-import com.effectivemobile.taskmanagementsystem.util.AppRole;
+import com.effectivemobile.taskmanagementsystem.util.Role;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -36,8 +37,9 @@ public class AuthController {
     })
     public ResponseEntity<JwtAuthenticationResponse> signUp(@AuthenticationPrincipal UserDetails userDetails,
                                                             @RequestBody @Valid SignUpRequest request) {
-        if (request.getRole().equals(AppRole.ROLE_ADMIN) && (userDetails == null ||
-                !userDetails.getAuthorities().contains(new SimpleGrantedAuthority(AppRole.ROLE_ADMIN.name())))) {
+        //нового Админа может зарегистрировать только авторизованный АДМИН
+        if (request.getRole().equals(Role.ROLE_ADMIN) && (userDetails == null ||
+                !userDetails.getAuthorities().contains(new SimpleGrantedAuthority(Role.ROLE_ADMIN.name())))) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         var token = authenticationService.signUp(request);
@@ -53,5 +55,16 @@ public class AuthController {
     public ResponseEntity<JwtAuthenticationResponse> signIn(@RequestBody @Valid SignInRequest request) {
         var token = authenticationService.signIn(request);
         return new ResponseEntity<>(token, HttpStatus.OK);
+    }
+
+    @PostMapping("/api/v1/token/refresh")
+    @Operation(summary = "Обновление токенов по refresh токену")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "токены обновлены"),
+            @ApiResponse(responseCode = "403", description = "refresh токен не действителен или не валиден")
+    })
+    public ResponseEntity<JwtAuthenticationResponse> refreshToken(@RequestBody @Valid JwtRefreshRequest refreshToken) {
+        var tokens = authenticationService.refreshToken(refreshToken.getRefreshToken());
+        return new ResponseEntity<>(tokens, HttpStatus.OK);
     }
 }

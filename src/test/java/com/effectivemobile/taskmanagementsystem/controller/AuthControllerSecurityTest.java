@@ -1,11 +1,13 @@
 package com.effectivemobile.taskmanagementsystem.controller;
 
-import com.effectivemobile.taskmanagementsystem.controller.dto.SignInRequest;
-import com.effectivemobile.taskmanagementsystem.controller.dto.SignUpRequest;
+import com.effectivemobile.taskmanagementsystem.dto.request.auth.JwtAuthenticationResponse;
+import com.effectivemobile.taskmanagementsystem.dto.request.auth.JwtRefreshRequest;
+import com.effectivemobile.taskmanagementsystem.dto.request.auth.SignInRequest;
+import com.effectivemobile.taskmanagementsystem.dto.request.auth.SignUpRequest;
 import com.effectivemobile.taskmanagementsystem.exception.UserNotFoundException;
-import com.effectivemobile.taskmanagementsystem.model.AppUser;
+import com.effectivemobile.taskmanagementsystem.model.User;
 import com.effectivemobile.taskmanagementsystem.service.UserServiceImpl;
-import com.effectivemobile.taskmanagementsystem.util.AppRole;
+import com.effectivemobile.taskmanagementsystem.util.Role;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +19,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -29,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @DisplayName("Тест безопасности контроллера аутентификации")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class AuthControllerSecurityTest {
     @Autowired
     private MockMvc mvc;
@@ -44,7 +48,7 @@ class AuthControllerSecurityTest {
 
     @BeforeEach
     void stubbing() {
-        when(userService.create(any(AppUser.class))).thenReturn(AppUser.builder().build());
+        when(userService.create(any(User.class))).thenReturn(User.builder().build());
     }
 
     /**
@@ -53,24 +57,28 @@ class AuthControllerSecurityTest {
     @Test
     @WithMockUser(authorities = "ROLE_ADMIN")
     void signUpToCreateAdminByAdmin() throws Exception {
-        SignUpRequest request = new SignUpRequest("newAdmin@gmail.com", "password", AppRole.ROLE_ADMIN);
+        SignUpRequest request = new SignUpRequest("newAdmin@gmail.com", "password", Role.ROLE_ADMIN);
 
         mvc.perform(MockMvcRequestBuilders.post("/api/v1/sign-up")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("token")));
+                .andExpect(content().string(containsString("accessToken")))
+                .andExpect(content().string(containsString("refreshToken"))
+                );
     }
 
     @Test
     void signUpNewUser() throws Exception {
-        SignUpRequest request = new SignUpRequest("newUser@gmail.com", "password", AppRole.ROLE_USER);
+        SignUpRequest request = new SignUpRequest("newUser@gmail.com", "password", Role.ROLE_USER);
 
         mvc.perform(MockMvcRequestBuilders.post("/api/v1/sign-up")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("token")));
+                .andExpect(content().string(containsString("accessToken")))
+                .andExpect(content().string(containsString("refreshToken"))
+                );
     }
 
     /**
@@ -79,7 +87,7 @@ class AuthControllerSecurityTest {
     @Test
     @WithMockUser(authorities = "ROLE_USER")
     void signUpToCreateAdminByUser() throws Exception {
-        SignUpRequest request = new SignUpRequest("newAdmin@gmail.com", "password", AppRole.ROLE_ADMIN);
+        SignUpRequest request = new SignUpRequest("newAdmin@gmail.com", "password", Role.ROLE_ADMIN);
 
         mvc.perform(MockMvcRequestBuilders.post("/api/v1/sign-up")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -92,7 +100,7 @@ class AuthControllerSecurityTest {
      */
     @Test
     void signUpToCreateAdminByUnauthorized() throws Exception {
-        SignUpRequest request = new SignUpRequest("newAdmin@gmail.com", "password", AppRole.ROLE_ADMIN);
+        SignUpRequest request = new SignUpRequest("newAdmin@gmail.com", "password", Role.ROLE_ADMIN);
 
         mvc.perform(MockMvcRequestBuilders.post("/api/v1/sign-up")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -103,11 +111,11 @@ class AuthControllerSecurityTest {
     @Test
     void signIn() throws Exception {
         final String email = "some@gmail.com";
-        AppUser user = AppUser.builder()
+        User user = User.builder()
                 .id(1L)
                 .email(email)
                 .password(encoder.encode("password"))
-                .role(AppRole.ROLE_USER)
+                .role(Role.ROLE_USER)
                 .build();
         when(userService.loadUserByUsername(email)).thenReturn(user);
         when(userService.getUserByEmail(email)).thenReturn(user);
@@ -117,7 +125,9 @@ class AuthControllerSecurityTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("token")));
+                .andExpect(content().string(containsString("accessToken")))
+                .andExpect(content().string(containsString("refreshToken"))
+                );
     }
 
     @Test
@@ -131,5 +141,40 @@ class AuthControllerSecurityTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void refreshToken() throws Exception {
+        final String email = "some@gmail.com";
+        User user = User.builder()
+                .id(1L)
+                .email(email)
+                .password(encoder.encode("password"))
+                .role(Role.ROLE_USER)
+                .build();
+        when(userService.loadUserByUsername(email)).thenReturn(user);
+        when(userService.getUserByEmail(email)).thenReturn(user);
+        SignInRequest request = new SignInRequest(email, "password");
+
+        String content = mvc.perform(MockMvcRequestBuilders.post("/api/v1/sign-in")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("accessToken")))
+                .andExpect(content().string(containsString("refreshToken"))
+                )
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        var tokens = mapper.readValue(content, JwtAuthenticationResponse.class);
+        var jwtRefreshRequest = new JwtRefreshRequest("Bearer " + tokens.getRefreshToken());
+
+        mvc.perform(MockMvcRequestBuilders.post("/api/v1/token/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(jwtRefreshRequest)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("accessToken")))
+                .andExpect(content().string(containsString("refreshToken"))
+                );
     }
 }

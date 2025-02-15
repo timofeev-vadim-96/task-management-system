@@ -1,5 +1,5 @@
 package com.effectivemobile.taskmanagementsystem.util;
 
-public enum AppRole {
+public enum Role {
     ROLE_ADMIN, ROLE_USER
 }

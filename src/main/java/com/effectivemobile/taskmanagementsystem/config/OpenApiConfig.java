@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
         info = @Info(
                 title = "TMS-API",
                 version = "v1",
-                description = "API системы управления задачами",
+                description = "The Task Management System API",
                 contact = @Contact(
                         name = "Timofeev Vadim",
                         email = "timofeev.vadim.96@mail.ru",
@@ -20,7 +20,7 @@ import org.springframework.context.annotation.Configuration;
         )
 )
 @SecurityScheme(
-        name = "bearerAuth",
+        name = "Bearer Authentication",
         type = SecuritySchemeType.HTTP,
         scheme = "bearer",
         bearerFormat = "JWT"

@@ -1,17 +1,18 @@
 package com.effectivemobile.taskmanagementsystem.service;
 
-import com.effectivemobile.taskmanagementsystem.dto.CommentDto;
+import com.effectivemobile.taskmanagementsystem.dto.request.comment.CommentDtoCreateRequest;
+import com.effectivemobile.taskmanagementsystem.dto.response.CommentDtoResponse;
 
 import java.util.List;
 
 public interface CommentService {
-    CommentDto get(long id);
+    CommentDtoResponse get(long id);
 
-    List<CommentDto> getAllByTask(long id);
+    List<CommentDtoResponse> getAllByTask(long id);
 
-    CommentDto create(CommentDto dto);
+    CommentDtoResponse create(CommentDtoCreateRequest dto);
 
-    CommentDto update(long id, String text);
+    CommentDtoResponse update(long id, String text);
 
     void deleteById(long id);
 }

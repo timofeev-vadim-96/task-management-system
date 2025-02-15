@@ -1,6 +1,6 @@
-package com.effectivemobile.taskmanagementsystem.controller.dto;
+package com.effectivemobile.taskmanagementsystem.dto.request.auth;
 
-import com.effectivemobile.taskmanagementsystem.util.AppRole;
+import com.effectivemobile.taskmanagementsystem.util.Role;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -26,5 +26,5 @@ public class SignUpRequest {
 
     @Schema(description = "Роль пользователя", example = "USER")
     @NotNull(message = "Роль пользователя должна быть заполнена")
-    private AppRole role;
+    private Role role;
 }

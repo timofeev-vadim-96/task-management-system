@@ -1,9 +1,9 @@
-package com.effectivemobile.taskmanagementsystem.converter;
+package com.effectivemobile.taskmanagementsystem.mapper;
 
-import com.effectivemobile.taskmanagementsystem.dto.CommentDto;
-import com.effectivemobile.taskmanagementsystem.model.AppUser;
+import com.effectivemobile.taskmanagementsystem.dto.response.CommentDtoResponse;
 import com.effectivemobile.taskmanagementsystem.model.Comment;
 import com.effectivemobile.taskmanagementsystem.model.Task;
+import com.effectivemobile.taskmanagementsystem.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,10 +13,10 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(classes = {CommentConverter.class})
-class CommentConverterTest {
+@SpringBootTest(classes = {CommentMapper.class})
+class CommentMapperTest {
     @Autowired
-    private CommentConverter commentConverter;
+    private CommentMapper commentMapper;
 
     private Comment comment;
 
@@ -25,14 +25,14 @@ class CommentConverterTest {
         comment = Comment.builder()
                 .id(1L)
                 .text("some text")
-                .author(AppUser.builder().id(1L).build())
+                .author(User.builder().id(1L).build())
                 .task(Task.builder().id(1L).build())
                 .build();
     }
 
     @Test
     void convertToDto() {
-        CommentDto dto = commentConverter.convertToDto(comment);
+        CommentDtoResponse dto = commentMapper.convertToDto(comment);
 
         assertThat(dto).isNotNull().hasNoNullFieldsOrProperties()
                 .hasFieldOrPropertyWithValue("id", comment.getId())
@@ -43,8 +43,8 @@ class CommentConverterTest {
 
     @Test
     void convertToDtos() {
-        List<CommentDto> dtos = commentConverter.convertToDtos(List.of(comment));
-        CommentDto dto = dtos.get(0);
+        List<CommentDtoResponse> dtos = commentMapper.convertToDtos(List.of(comment));
+        CommentDtoResponse dto = dtos.get(0);
 
         assertThat(dto).isNotNull().hasNoNullFieldsOrProperties()
                 .hasFieldOrPropertyWithValue("id", comment.getId())

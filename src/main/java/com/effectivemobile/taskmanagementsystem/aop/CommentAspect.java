@@ -1,13 +1,14 @@
 package com.effectivemobile.taskmanagementsystem.aop;
 
-import com.effectivemobile.taskmanagementsystem.dto.CommentDto;
-import com.effectivemobile.taskmanagementsystem.dto.TaskDto;
+import com.effectivemobile.taskmanagementsystem.dto.request.comment.CommentDtoCreateRequest;
+import com.effectivemobile.taskmanagementsystem.dto.response.CommentDtoResponse;
+import com.effectivemobile.taskmanagementsystem.dto.response.TaskDtoResponse;
 import com.effectivemobile.taskmanagementsystem.exception.AttemptingAccessOtherUserEntityException;
-import com.effectivemobile.taskmanagementsystem.model.AppUser;
+import com.effectivemobile.taskmanagementsystem.model.User;
 import com.effectivemobile.taskmanagementsystem.service.CommentService;
 import com.effectivemobile.taskmanagementsystem.service.TaskService;
 import com.effectivemobile.taskmanagementsystem.service.UserService;
-import com.effectivemobile.taskmanagementsystem.util.AppRole;
+import com.effectivemobile.taskmanagementsystem.util.Role;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
@@ -30,10 +31,10 @@ public class CommentAspect {
     @Before(value = "execution(* com.effectivemobile.taskmanagementsystem.service.CommentServiceImpl" +
             ".update(long,..)) && args(id,..)", argNames = "id")
     public void protectAnotherUserCommentBeforeUpdate(long id) {
-        AppUser currentUser = userService.getCurrentAppUser();
+        User currentUser = userService.getCurrentAppUser();
 
-        if (!currentUser.getRole().equals(AppRole.ROLE_ADMIN)) {
-            CommentDto comment = commentService.get(id);
+        if (!currentUser.getRole().equals(Role.ROLE_ADMIN)) {
+            CommentDtoResponse comment = commentService.get(id);
             if (!currentUser.getId().equals(comment.getAuthorId())) {
                 throw new AttemptingAccessOtherUserEntityException(
                         "Попытка пользователя с id = %d изменения комментария пользователя с id = %d"
@@ -48,11 +49,11 @@ public class CommentAspect {
     @Before(value = "execution(* com.effectivemobile.taskmanagementsystem.service.CommentServiceImpl.create(..))")
     public void preventAttemptingCreateCommentOnAnotherUserTask(JoinPoint joinPoint) {
         Object[] args = joinPoint.getArgs();
-        CommentDto dto = (CommentDto) args[0];
+        CommentDtoCreateRequest dto = (CommentDtoCreateRequest) args[0];
 
-        AppUser currentUser = userService.getCurrentAppUser();
-        if (!currentUser.getRole().equals(AppRole.ROLE_ADMIN)) {
-            TaskDto task = taskService.get(dto.getTaskId());
+        User currentUser = userService.getCurrentAppUser();
+        if (!currentUser.getRole().equals(Role.ROLE_ADMIN)) {
+            TaskDtoResponse task = taskService.get(dto.getTaskId());
             if (!currentUser.getId().equals(dto.getAuthorId())) {
                 throw new AttemptingAccessOtherUserEntityException(
                         "Попытка пользователя с id = %d создать комментарий под видом исполнителя с id = %d"

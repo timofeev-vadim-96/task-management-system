@@ -1,7 +1,7 @@
 package com.effectivemobile.taskmanagementsystem.util;
 
 import com.effectivemobile.taskmanagementsystem.dao.UserDao;
-import com.effectivemobile.taskmanagementsystem.model.AppUser;
+import com.effectivemobile.taskmanagementsystem.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -28,7 +28,7 @@ public class UserPasswordCryptographer {
     @EventListener(ContextRefreshedEvent.class)
     @Transactional
     public void encodeUsersPasswords() {
-        List<AppUser> users = dao.findAll();
+        List<User> users = dao.findAll();
 
         if (!users.isEmpty()) {
             String password = users.get(0).getPassword();
@@ -38,7 +38,7 @@ public class UserPasswordCryptographer {
         }
 
         log.info("encoding passwords...");
-        for (AppUser user : users) {
+        for (User user : users) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
         dao.saveAll(users);

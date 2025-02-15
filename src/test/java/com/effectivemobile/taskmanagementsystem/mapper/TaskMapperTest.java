@@ -1,10 +1,10 @@
-package com.effectivemobile.taskmanagementsystem.converter;
+package com.effectivemobile.taskmanagementsystem.mapper;
 
-import com.effectivemobile.taskmanagementsystem.dto.CommentDto;
-import com.effectivemobile.taskmanagementsystem.dto.TaskDto;
-import com.effectivemobile.taskmanagementsystem.model.AppUser;
+import com.effectivemobile.taskmanagementsystem.dto.response.CommentDtoResponse;
+import com.effectivemobile.taskmanagementsystem.dto.response.TaskDtoResponse;
 import com.effectivemobile.taskmanagementsystem.model.Comment;
 import com.effectivemobile.taskmanagementsystem.model.Task;
+import com.effectivemobile.taskmanagementsystem.model.User;
 import com.effectivemobile.taskmanagementsystem.util.TaskPriority;
 import com.effectivemobile.taskmanagementsystem.util.TaskStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,13 +20,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest(classes = {TaskConverter.class, CommentConverter.class})
-class TaskConverterTest {
+@SpringBootTest(classes = {TaskMapper.class, CommentMapper.class})
+class TaskMapperTest {
     @Autowired
-    private TaskConverter taskConverter;
+    private TaskMapper taskMapper;
 
     @MockBean
-    private CommentConverter commentConverter;
+    private CommentMapper commentMapper;
 
     private Task task;
 
@@ -38,28 +38,28 @@ class TaskConverterTest {
                 .id(1L)
                 .title("some title")
                 .description("some description")
-                .priority(TaskPriority.НИЗКИЙ)
-                .status(TaskStatus.В_ОЖИДАНИИ)
-                .author(new AppUser())
-                .implementor(new AppUser())
+                .priority(TaskPriority.LOW)
+                .status(TaskStatus.IN_STAY)
+                .author(new User())
+                .implementor(new User())
                 .build();
 
         comment = Comment.builder()
                 .id(1L)
                 .text("some text")
-                .author(new AppUser())
+                .author(new User())
                 .task(task)
                 .build();
 
-        when(commentConverter.convertToDto(any(Comment.class))).thenReturn(CommentDto.builder().id(1L).build());
+        when(commentMapper.convertToDto(any(Comment.class))).thenReturn(CommentDtoResponse.builder().id(1L).build());
     }
 
     @Test
     void convertToDtoWithComments() {
-        when(commentConverter.convertToDtos(any())).thenReturn(List.of(CommentDto.builder().id(1L).build()));
+        when(commentMapper.convertToDtos(any())).thenReturn(List.of(CommentDtoResponse.builder().id(1L).build()));
         task.setComments(List.of(comment));
 
-        TaskDto dto = taskConverter.convertToDto(task);
+        TaskDtoResponse dto = taskMapper.convertToDto(task);
 
         assertThat(dto).hasFieldOrPropertyWithValue("title", task.getTitle())
                 .hasFieldOrPropertyWithValue("description", task.getDescription())
@@ -72,7 +72,7 @@ class TaskConverterTest {
 
     @Test
     void convertToDtoWithoutComments() {
-        TaskDto dto = taskConverter.convertToDto(task);
+        TaskDtoResponse dto = taskMapper.convertToDto(task);
 
         assertThat(dto).hasFieldOrPropertyWithValue("title", task.getTitle())
                 .hasFieldOrPropertyWithValue("description", task.getDescription())
@@ -85,13 +85,13 @@ class TaskConverterTest {
 
     @Test
     void convertToDtos() {
-        when(commentConverter.convertToDtos(any())).thenReturn(List.of(CommentDto.builder().id(1L).build()));
+        when(commentMapper.convertToDtos(any())).thenReturn(List.of(CommentDtoResponse.builder().id(1L).build()));
         task.setComments(List.of(comment));
 
-        List<TaskDto> dtos = taskConverter.convertToDtos(List.of(task));
+        List<TaskDtoResponse> dtos = taskMapper.convertToDtos(List.of(task));
 
         assertThat(dtos).isNotNull().isNotEmpty();
-        TaskDto dto = dtos.get(0);
+        TaskDtoResponse dto = dtos.get(0);
         assertThat(dto).hasFieldOrPropertyWithValue("title", task.getTitle())
                 .hasFieldOrPropertyWithValue("description", task.getDescription())
                 .hasFieldOrPropertyWithValue("status", task.getStatus())
