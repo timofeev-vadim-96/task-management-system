@@ -18,6 +18,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Set environment variable
+        run: echo "SECRET_JWT_KEY=${{ secrets.SECRET_JWT_KEY }}" >> $GITHUB_ENV
+
       - name: Build application
         run: |
           mvn verify --no-transfer-progress
