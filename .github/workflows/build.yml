@@ -1,10 +1,10 @@
-name: Build
+name: Test
 
 on:
   pull_request:
 
 jobs:
-  build-app:
+  test-app:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,6 +21,6 @@ jobs:
       - name: Set environment variable
         run: echo "SECRET_JWT_KEY=${{ secrets.SECRET_JWT_KEY }}" >> $GITHUB_ENV
 
-      - name: Build application
+      - name: Run tests
         run: |
-          mvn verify --no-transfer-progress
+          mvn test --no-transfer-progress
